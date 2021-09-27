@@ -301,4 +301,11 @@
 #include "imx8mm_evk_android.h"
 #endif
 
+#ifdef CONFIG_IMX8M_4G_LPDDR4
+#undef PHYS_SDRAM_SIZE
+#define PHYS_SDRAM_SIZE          0xC0000000 /* 3GB */
+#define PHYS_SDRAM_2             0x100000000
+#define PHYS_SDRAM_2_SIZE        0x40000000 /* 1GB */
+#endif
+
 #endif
