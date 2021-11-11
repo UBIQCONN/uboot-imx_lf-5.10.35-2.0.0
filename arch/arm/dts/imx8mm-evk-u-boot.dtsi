@@ -185,7 +185,6 @@
 
 &usbotg1 {
 	status = "okay";
-	extcon = <&ptn5110>;
 };
 
 &lcdif {

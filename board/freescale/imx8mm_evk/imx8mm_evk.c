@@ -292,6 +292,17 @@ int board_ehci_usb_phy_mode(struct udevice *dev)
 
 	return USB_INIT_DEVICE;
 }
+#else
+int board_usb_init(int index, enum usb_init_type init)
+{
+        int ret = 0;
+
+        debug("board_usb_init %d, type %d\n", index, init);
+
+        imx8m_usb_power(index, true);
+
+        return ret;
+}
 
 #endif
 

@@ -41,6 +41,43 @@
 		enable-active-high;
 	};
 
+	reg_usb_otg1_vbus: regulator-usbotg1-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "usb_otg1_vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_reg_usb_otg1_vbus>;
+		gpio = <&gpio4 27 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+
+        /* on module USB hub */
+        reg_usb_host_vbus_hub: regulator-usb-host-vbus-hub {
+                compatible = "regulator-fixed";
+                pinctrl-names = "default";
+                pinctrl-0 = <&pinctrl_regulator_usbhub_pwr>;
+                regulator-name = "usb_host_vbus_hub";
+                regulator-min-microvolt = <5000000>;
+                regulator-max-microvolt = <5000000>;
+                gpio = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+                startup-delay-us = <8000>; 
+                enable-active-high;
+                status = "okay";
+        };
+
+	reg_usb_otg2_vbus: regulator-usbotg2-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "usb_otg2_vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_reg_usb_otg2_vbus>;
+		gpio = <&gpio4 24 GPIO_ACTIVE_HIGH>;
+		vin-supply = <&reg_usb_host_vbus_hub>;
+		enable-active-high;
+	};
+
 	ir-receiver {
 		compatible = "gpio-ir-receiver";
 		gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
@@ -107,6 +144,24 @@
 			};
 		};
 	};
+
+	EM9_Full_pwr_on: em9-full-pwr-on {
+                compatible = "regulator-fixed";
+                regulator-name = "em9_full_pwr_up";
+                enable-active-high;
+                gpio = <&pca9535_2 8 GPIO_ACTIVE_HIGH>;
+/*                regulator-always-on;  */
+                regulator-boot-on;   
+        };
+
+	EM9_RESET: em9-reset {
+                compatible = "regulator-fixed";
+                regulator-name = "em10_reset";
+                enable-active-high;
+                gpio = <&pca9535_2 10 GPIO_ACTIVE_HIGH>;
+                regulator-always-on; 
+                regulator-boot-on;  
+        };
 };
 
 &A53_0 {
@@ -312,34 +367,6 @@
 		};
 	};
 
-	ptn5110: tcpc@50 {
-		compatible = "nxp,ptn5110";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_typec1>;
-		reg = <0x50>;
-		interrupt-parent = <&gpio2>;
-		interrupts = <11 8>;
-		status = "okay";
-
-		port {
-			typec1_dr_sw: endpoint {
-				remote-endpoint = <&usb1_drd_sw>;
-			};
-		};
-
-		typec1_con: connector {
-			compatible = "usb-c-connector";
-			label = "USB-C";
-			power-role = "dual";
-			data-role = "dual";
-			try-power-role = "sink";
-			source-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)>;
-			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
-				     PDO_VAR(5000, 20000, 3000)>;
-			op-sink-microwatt = <15000000>;
-			self-powered;
-		};
-	};
 };
 
 &i2c3 {
@@ -357,6 +384,35 @@
 		gpio-controller;
 		#gpio-cells = <2>;
 	};
+};
+
+&i2c4 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c4>;
+	status = "okay";
+
+	pca9535_1: gpio-expander@20 {
+                compatible = "nxp,pca9535";
+                reg = <0x20>;
+                gpio-controller;
+                #gpio-cells = <2>;
+                pinctrl-names = "default";
+                pinctrl-0 = <&pinctrl_pca9535_1>;
+                interrupt-parent = <&gpio1>;
+                interrupts = <15 IRQ_TYPE_LEVEL_LOW>;
+                interrupt-controller;
+                #interrupt-cells = <2>;
+        };
+
+	pca9535_2: gpio-expander@21 {
+                compatible = "nxp,pca9535";
+                reg = <0x21>;
+                gpio-controller;
+                #gpio-cells = <2>;
+                interrupt-controller;
+                #interrupt-cells = <2>;
+        };
 };
 
 &sai3 {
@@ -379,21 +435,15 @@
 };
 
 &usbotg1 {
-	dr_mode = "otg";
-	hnp-disable;
-	srp-disable;
-	adp-disable;
-	usb-role-switch;
-	disable-over-current;
-	samsung,picophy-pre-emp-curr-control = <3>;
-	samsung,picophy-dc-vol-level-adjust = <7>;
-	status = "okay";
+        vbus-supply = <&reg_usb_otg1_vbus>;
+        dr_mode = "host";
+        status = "okay";
+};
 
-	port {
-		usb1_drd_sw: endpoint {
-			remote-endpoint = <&typec1_dr_sw>;
-		};
-	};
+&usbotg2 {
+	dr_mode = "host";
+	vbus-supply = <&reg_usb_otg2_vbus>;
+	status = "okay";
 };
 
 &usdhc2 {
@@ -516,6 +566,13 @@
 		>;
 	};
 
+	pinctrl_i2c4: i2c4grp {
+		fsl,pins = <
+			MX8MM_IOMUXC_I2C4_SCL_I2C4_SCL			0x400001c3
+			MX8MM_IOMUXC_I2C4_SDA_I2C4_SDA			0x400001c3
+		>;
+	};
+
 	pinctrl_i2c1_gpio: i2c1grp-gpio {
 		fsl,pins = <
 			MX8MM_IOMUXC_I2C1_SCL_GPIO5_IO14        		0x1c3
@@ -534,6 +591,12 @@
 		fsl,pins = <
 			MX8MM_IOMUXC_I2C3_SCL_GPIO5_IO18        		0x1c3
 			MX8MM_IOMUXC_I2C3_SDA_GPIO5_IO19        	0x1c3
+		>;
+	};
+
+	pinctrl_pca9535_1: ext1grp {
+		fsl,pins = <
+			MX8MM_IOMUXC_GPIO1_IO15_GPIO1_IO15	0x19
 		>;
 	};
 
@@ -624,4 +687,24 @@
 			MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8		0x19
 		>;
 	};
+
+	pinctrl_reg_usb_otg1_vbus: regusbotg1vbusgrp {
+		fsl,pins = <
+			MX8MM_IOMUXC_SAI2_MCLK_GPIO4_IO27	0x16
+		>;
+	};
+
+	pinctrl_regulator_usbhub_pwr: gpioregusbhubpwrgrp {
+		fsl,pins = <
+			/* USBH_HUB_EN */
+			MX8MM_IOMUXC_GPIO1_IO01_GPIO1_IO1	0x16
+		>;
+	};
+
+	pinctrl_reg_usb_otg2_vbus: regusbotg2vbusgrp {
+		fsl,pins = <
+			MX8MM_IOMUXC_SAI2_TXFS_GPIO4_IO24	0x16
+		>;
+	};
+
 };
