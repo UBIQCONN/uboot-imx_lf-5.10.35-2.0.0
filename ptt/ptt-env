@@ -1,10 +1,11 @@
 bootcmd=run setversion;run mmcargs;run fitload;echo "Will boot ${fitimage}";bootm ${loadaddr}
+bootrescue=env set mmcpart 1;echo "Starting to boot from safe image";run bootcmd
 console=ttymxc1,115200
 fitimage=fw/stable/fitImage
 fitload=ext4load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${fitimage}
 installload=mmc dev 1;fatload mmc 1:1 ${scriptaddr} ptt-install-image.scr;source ${scriptaddr}
 loadaddr=0x43400000
-mmcargs=env set bootargs console=${console} root=${rootdev} ptt_version=${version}
+mmcargs=env set bootargs console=${console} root=${rootdev} ptt_version=${version} mmcpart=${mmcpart}
 mmcdev=2
 mmcpart=2
 rootdev=/dev/ram0
