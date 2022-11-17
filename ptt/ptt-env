@@ -1,4 +1,4 @@
-bootcmd=run bootpre;if bootm ${loadaddr};then  echo "Boot successful";else run bootrescue; fi
+bootcmd=env set mmcpart 2;run bootpre;if bootm ${loadaddr};then  echo "Boot successful";else run bootrescue; fi
 bootpre=run setversion;run mmcargs;run fitload;echo "Will boot ${fitimage}"
 bootrescue=env set mmcpart 1;echo "Starting to boot from safe image";run bootpre;bootm ${loadaddr}
 console=ttymxc1,115200
