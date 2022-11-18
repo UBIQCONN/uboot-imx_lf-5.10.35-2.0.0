@@ -1,11 +1,11 @@
-bootcmd=run bootpre;if bootm ${loadaddr};then  echo "Boot successful";else run forcebootrescue; fi
+bootcmd=run bootpre;if test ${checkresult} -ne 0; then run forcebootrescue; fi;if bootm ${loadaddr};then  echo "Boot successful";else run forcebootrescue; fi
 bootpre=run setversion;run setmmcpart;run bootinit
 bootinit=run mmcargs;run fitload;echo "Will boot ${fitimage} from partition ${mmcpart}"
 forcebootrescue=run bootprerescue;bootm ${loadaddr}
 bootprerescue=env set version ${stableversion};env set mmcpart 1;run bootinit
 console=ttymxc1,115200
 fitimage=fw/stable/fitImage
-fitload=ext4load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${fitimage}
+fitload=ext4load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${fitimage}; env set checkresult $?;
 installload=mmc dev 1;fatload mmc 1:1 ${scriptaddr} ptt-install-image.scr;source ${scriptaddr}
 loadaddr=0x43400000
 mmcargs=env set bootargs console=${console} root=${rootdev} ptt_version=${version} mmcpart=${mmcpart}
