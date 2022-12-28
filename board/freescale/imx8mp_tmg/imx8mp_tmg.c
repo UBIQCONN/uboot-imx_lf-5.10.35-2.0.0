@@ -355,11 +355,11 @@ int board_usb_init(int index, enum usb_init_type init)
 #ifdef CONFIG_USB_TCPC
 		ret = tcpc_setup_dfp_mode(&port1);
 #endif
-		mdelay(20);		
+		mdelay(1);		
 		gpio_request(USB1_PWR_EN, "usb1_pwr");
 		gpio_direction_output(USB1_PWR_EN, 1);
 
-		mdelay(20);		
+		mdelay(1);		
 		return ret;
 	} else if (index == 1 && init == USB_INIT_HOST) {
 	}
